@@ -1,18 +1,31 @@
-import json
-import torchaudio
-import torch
 import io
 import uvicorn
 
 from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from src.asr import ASR
 from src.audio import AudioReader
 
 
 app = FastAPI()
-asr_model = ASR()
+origins = [
+    "http://localhost:8000",
+    "localhost:8000"
+]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+
+# asr_model = ASR()
 audio_reader = AudioReader()
 
 
@@ -46,7 +59,8 @@ def transcript(file: UploadFile):
     print(content)
 
     signal = audio_reader.read_audio(content)
-    transcription = asr_model.predict(signal)
+    # transcription = asr_model.predict(signal)
+    transcription = "teste"
 
     return {
         "name": file,
