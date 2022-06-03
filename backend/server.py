@@ -1,5 +1,4 @@
 import io
-import uvicorn
 
 from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile
@@ -66,7 +65,3 @@ def transcript(file: UploadFile):
         "name": file,
         "transcription": transcription
     }
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
