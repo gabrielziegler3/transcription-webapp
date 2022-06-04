@@ -1,24 +1,29 @@
 import torch
+from pathlib import Path
 
 from transformers import AutoModelForCTC, AutoProcessor
-from typing import Optional
+from typing import Union
 
 
 class ASR:
     def __init__(self):
-        # self.model_id = "patrickvonplaten/hubert-xlarge-ls960-ft-4-gram"
-        self.model_id = "/backend/models/"
         self.device = "cpu"
-        self.load_model()
         self.sampling_rate = 16_000
+        self.ACOUSTIC_MODEL_PATH = Path("/backend/ml_models/acoustic")
+        self.PROCESSOR_MODEL_PATH = Path("/backend/ml_models/processor")
+        self.load_model()
         print("ASR Model loaded!")
 
-    def load_model(self):
+    def load_model(self) -> None:
+        if not self.ACOUSTIC_MODEL_PATH.exists() or not self.PROCESSOR_MODEL_PATH.exists():
+            print("Path to models does not exist. Exiting...")
+            return
         self.model = AutoModelForCTC.from_pretrained(
-            self.model_id).to(self.device)
-        self.processor = AutoProcessor.from_pretrained(self.model_id)
+            self.ACOUSTIC_MODEL_PATH).to(self.device)
+        self.processor = AutoProcessor.from_pretrained(
+            self.PROCESSOR_MODEL_PATH)
 
-    def predict(self, signal: torch.Tensor) -> Optional[str]:
+    def predict(self, signal: torch.Tensor) -> Union[str, None]:
         inputs = self.processor(signal, sampling_rate=self.sampling_rate,
                                 return_tensors="pt")
         print("Inputs processed")

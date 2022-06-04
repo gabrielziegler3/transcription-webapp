@@ -1,11 +1,10 @@
 import io
 
-from pydantic import BaseModel
-from fastapi import FastAPI, File, UploadFile, Request
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from src.asr import ASR
-from src.audio import AudioReader
+from src.audio_reader import AudioReader
 
 
 app = FastAPI()
@@ -21,7 +20,7 @@ app.add_middleware(
 )
 
 
-# asr_model = ASR()
+asr_model = ASR()
 audio_reader = AudioReader()
 
 
@@ -54,10 +53,14 @@ async def transcript(file: UploadFile = File(...)):
     content = io.BytesIO(file.file.read())
 
     signal = audio_reader.read_audio(content)
-    # transcription = asr_model.predict(signal)
-    transcription = "teste"
+    duration = audio_reader.duration
+    transcription = asr_model.predict(signal)
 
-    return {
-        "name": file,
+    response = {
+        "duration": duration,
         "transcription": transcription
     }
+
+    print(response)
+
+    return response
