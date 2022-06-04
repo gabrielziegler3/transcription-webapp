@@ -4,26 +4,23 @@ import React, { Component } from 'react';
 
 class App extends Component {
     state = {
-        selectedFile: null
+        selectedFile: null,
+        transcription: null
     };
 
-    onFileChange = event => {
+    onFileChange = (event) => {
         this.setState({ selectedFile: event.target.files[0] });
     };
 
     onFileUpload = () => {
         const data = new FormData();
 
-        data.append(
-            "file",
-            this.state.selectedFile
-            // this.state.selectedFile.name
-        );
+        data.append("file", this.state.selectedFile);
 
         axios
             .post("http://localhost:80/transcript", data)
             .then((response) => {
-                console.log(JSON.stringify(response.data));
+                this.setState({ transcription: response.data.transcription });
             })
             .catch((error) => {
                 console.log(error)
@@ -53,6 +50,17 @@ class App extends Component {
         }
     };
 
+    transcriptionData = () => {
+        if (this.state.transcription) {
+            return (
+            <div>
+                <h2> Transcription: </h2>
+                <p> {this.state.transcription} </p>
+            </div>
+            );
+        }
+    };
+
     render() {
 
         return (
@@ -66,6 +74,7 @@ class App extends Component {
                     </p>
                 </div>
                 {this.fileData()}
+                {this.transcriptionData()}
             </div>
         );
     }
