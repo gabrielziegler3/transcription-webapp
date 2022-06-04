@@ -1,12 +1,17 @@
 import io
+import logging
 
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
+from src.logger import LogHandler
 from src.asr import ASR
 from src.audio_reader import AudioReader
 
 
+log = logging.getLogger(__file__)
+log.setLevel('DEBUG')
+log.addHandler(LogHandler())
 app = FastAPI()
 origins = ["*"]
 
@@ -57,10 +62,11 @@ async def transcript(file: UploadFile = File(...)):
     transcription = asr_model.predict(signal)
 
     response = {
+        "filename": file.filename,
         "duration": duration,
         "transcription": transcription
     }
 
-    print(response)
+    log.info(response)
 
     return response

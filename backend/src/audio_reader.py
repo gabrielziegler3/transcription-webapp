@@ -1,5 +1,13 @@
 import torch
 import torchaudio
+import logging
+
+from src.logger import LogHandler
+
+
+log = logging.getLogger(__file__)
+log.setLevel('DEBUG')
+log.addHandler(LogHandler())
 
 
 class AudioReader:
@@ -13,10 +21,10 @@ class AudioReader:
         self.duration = signal.size()[-1] / sr
 
         if sr != self.sampling_rate:
-            print(f"Resampling from {sr} to {self.sampling_rate}")
+            log.info(f"Resampling from {sr} to {self.sampling_rate}")
             signal = torchaudio.transforms.Resample(sr, self.sampling_rate)(signal)
 
-        print("Signal with shape:", signal.shape)
+        log.info(f"Signal shape {signal.shape}")
 
         return signal.squeeze(0)
 
