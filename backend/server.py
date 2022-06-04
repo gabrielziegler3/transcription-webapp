@@ -1,7 +1,7 @@
 import io
 
 from pydantic import BaseModel
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from src.asr import ASR
@@ -9,10 +9,7 @@ from src.audio import AudioReader
 
 
 app = FastAPI()
-origins = [
-    "http://localhost:8000",
-    "localhost:8000"
-]
+origins = ["*"]
 
 
 app.add_middleware(
@@ -43,6 +40,7 @@ async def create_upload_file(file: UploadFile):
         "name": file.filename,
     }
 
+
 @app.get("/list_files")
 async def list_files():
     # TODO
@@ -52,10 +50,8 @@ async def list_files():
 
 
 @app.post("/transcript")
-def transcript(file: UploadFile):
+async def transcript(file: UploadFile = File(...)):
     content = io.BytesIO(file.file.read())
-    print("CONTENT")
-    print(content)
 
     signal = audio_reader.read_audio(content)
     # transcription = asr_model.predict(signal)
