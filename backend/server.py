@@ -37,22 +37,6 @@ def home():
     }
 
 
-@app.post("/upload_file")
-async def create_upload_file(file: UploadFile):
-    # TODO
-    return {
-        "name": file.filename,
-    }
-
-
-@app.get("/list_files")
-async def list_files():
-    # TODO
-    return {
-        "date": datetime.now().strftime("%Y%m%d %H:%M:%S")
-    }
-
-
 @app.post("/transcript")
 async def transcript(file: UploadFile = File(...)):
     content = io.BytesIO(file.file.read())
