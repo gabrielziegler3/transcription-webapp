@@ -35,8 +35,6 @@ class ASR:
                                 return_tensors="pt")
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-        # log.debug(f"inputs: {inputs}")
-
         with torch.no_grad():
             logits = self.model(**inputs).logits
 

@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import LinearProgress from '@material-ui/core/LinearProgress';
 import { Box, Typography, Button, withStyles } from '@material-ui/core';
-
+import { useLocation } from 'react-router-dom'
 import UploadService from "../services/upload-files.service";
 
 const BorderLinearProgress = withStyles((theme) => ({

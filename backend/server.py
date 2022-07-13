@@ -9,7 +9,8 @@ from src.asr import ASR
 from src.audio_reader import AudioReader
 
 
-log = logging.getLogger(__file__)
+# log = logging.getLogger(__file__)
+log = logging.getLogger("root")
 log.setLevel('DEBUG')
 log.addHandler(LogHandler())
 app = FastAPI()
