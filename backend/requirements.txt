@@ -1,5 +1,5 @@
 fastapi==0.78.0
-uvicorn==0.17.6
+uvicorn[standard]==0.17.6
 pydantic==1.9.1
 torch==1.11.0
 torchaudio==0.11.0
@@ -8,3 +8,4 @@ huggingface-hub==0.7.0
 pyctcdecode==0.3.0
 https://github.com/kpu/kenlm/archive/master.zip
 python-multipart==0.0.5
+numpy==1.22.4
