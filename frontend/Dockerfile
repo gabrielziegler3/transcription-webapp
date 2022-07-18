@@ -1,6 +1,7 @@
 FROM python:latest
 
 RUN python --version
+RUN pip install -U pip
 
 WORKDIR /frontend
 

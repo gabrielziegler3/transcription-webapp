@@ -17,24 +17,33 @@ TRANSCRIPTION_URL = "http://host.docker.internal:80/transcript/"
 
 
 def test():
-    response = requests.get(url="http://host.docker.internal:80/")
+    response = requests.get(url=SERVER_URL)
     logger.info(f"Response: {response.content}")
     st.write(response.content)
 
-def _read_audio(file: io.Bytes) -> np.ndarray:
+def _read_audio(file: io.BytesIO) -> np.ndarray:
     endpoint = SERVER_URL + "read_audio"
 
     payload = {
         "file": file
     }
 
-    logger.info(f"Sending request to {}")
+    logger.info(f"Sending request to {endpoint}")
     response = requests.post(
         url=endpoint,
         files=payload,
         # headers=headers
     )
-    requests.post()
+    if response.status_code != 200:
+        logger.info(f"Couldn't read audio. Received {response.status_code} status code")
+
+    signal = json.loads(response.content)["signal"]
+    audio = np.array(signal)
+
+    logger.info(audio)
+    logger.info(f"Audio with shape {audio.shape} read")
+
+    return audio
 
 
 def transcription():
@@ -46,16 +55,14 @@ def transcription():
 
     uploaded_file = st.file_uploader("Choose a file")
 
+    logger.info(f"Uploaded file type {type(uploaded_file)}")
+
     if not uploaded_file:
         return
 
-    # To read file as bytes:
-    bytes_data = uploaded_file.getvalue()
-    logger.info("File read succesfully")
-
     """Move this code"""
     audio = _read_audio(uploaded_file)
-    plot_line(x=range(audio.shape[1]), y=audio.flatten())
+    plot_line(x=range(len(audio)), y=audio.flatten())
     """"""
 
     # headers = {
@@ -74,8 +81,8 @@ def transcription():
 
     if response.status_code != 200:
         logger.warn(f"Status {response.status_code} received. Error attempting transcription API")
+        return
 
-    response = json.loads(response.content)
-    transc = response.get('transcription')
+    transc = json.loads(response.content)["transcription"]
     logger.info(f"Transcription: {transc}")
     st.write(transc)
