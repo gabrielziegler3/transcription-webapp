@@ -5,6 +5,8 @@ RUN pip install -U pip
 
 WORKDIR /backend
 
+COPY ./requirements.txt /backend/requirements.txt
+
 COPY . /backend
 
 RUN pip install -r /backend/requirements.txt

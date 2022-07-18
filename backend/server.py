@@ -1,7 +1,8 @@
 import io
 import logging
+import torch
 
-from typing import List
+from typing import List, Union
 from datetime import datetime
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,7 +28,7 @@ app.add_middleware(
 
 
 asr_model = ASR()
-audio_reader = AudioReader()
+# audio_reader = AudioReader()
 
 
 @app.get("/")
@@ -38,35 +39,36 @@ def home():
     }
 
 
+def parse_audio_file(file: UploadFile) -> Union[torch.Tensor, None]:
+    audio_reader = AudioReader()
+    content = io.BytesIO(file.file.read())
+    logger.info(f"Preparing to read content: {content}")
+    signal = audio_reader.read_audio(content)
+    return signal
+
+
 @app.post("/read_audio")
-async def read_audio(file: UploadFile = File(...)) -> List[List[int]]:
+def read_audio(file: UploadFile = File(...)):
     logger.info(f"Received {file.filename} at /read_audio")
 
-    content = io.BytesIO(file.file.read())
-
-    signal = audio_reader.read_audio(content).numpy()
+    signal = parse_audio_file(file)
 
     response = {
-        "signal": signal.tolist(),
+        "signal": signal.numpy().tolist(),
     }
-    logger.info(f"Audio shape: {signal.shape}")
 
     return response
 
 
 @app.post("/transcript")
-async def transcript(file: UploadFile = File(...)):
+def transcript(file: UploadFile = File(...)):
     logger.info(f"Received {file.filename} at /transcript")
 
-    content = io.BytesIO(file.file.read())
+    signal = parse_audio_file(file)
 
-    signal = audio_reader.read_audio(content)
-    duration = audio_reader.duration
-    transcription = asr_model.predict(signal)
+    transcription = asr_model.predict(signal.squeeze(0))
 
     response = {
-        "filename": file.filename,
-        "duration": duration,
         "transcription": transcription
     }
 

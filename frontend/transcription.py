@@ -13,13 +13,13 @@ logger = logging.getLogger(__file__)
 logger.setLevel('DEBUG')
 logger.addHandler(LogHandler())
 SERVER_URL = "http://host.docker.internal:80/"
-TRANSCRIPTION_URL = "http://host.docker.internal:80/transcript/"
 
 
 def test():
     response = requests.get(url=SERVER_URL)
     logger.info(f"Response: {response.content}")
     st.write(response.content)
+
 
 def _read_audio(file: io.BytesIO) -> np.ndarray:
     endpoint = SERVER_URL + "read_audio"
@@ -28,7 +28,7 @@ def _read_audio(file: io.BytesIO) -> np.ndarray:
         "file": file
     }
 
-    logger.info(f"Sending request to {endpoint}")
+    logger.info(f"Sending request with {file} to {endpoint}")
     response = requests.post(
         url=endpoint,
         files=payload,
@@ -47,6 +47,8 @@ def _read_audio(file: io.BytesIO) -> np.ndarray:
 
 
 def transcription():
+    endpoint = SERVER_URL + "transcript"
+
     st.title('Transcription')
 
     st.sidebar.title("Services")
@@ -60,23 +62,17 @@ def transcription():
     if not uploaded_file:
         return
 
-    """Move this code"""
-    audio = _read_audio(uploaded_file)
-    plot_line(x=range(len(audio)), y=audio.flatten())
-    """"""
+    # audio = _read_audio(uploaded_file)
+    # plot_line(x=range(len(audio)), y=audio.flatten())
 
-    # headers = {
-    #     "Content-Type": "audio/form-data",
-    # }
     payload = {
         "file": uploaded_file
     }
 
-    logger.info(f"Sending request to {TRANSCRIPTION_URL}")
+    logger.info(f"Sending request with {uploaded_file} to {endpoint}")
     response = requests.post(
-        url=TRANSCRIPTION_URL,
+        url=endpoint,
         files=payload,
-        # headers=headers
     )
 
     if response.status_code != 200:

@@ -21,7 +21,7 @@ class AudioReader:
             signal, sr = torchaudio.load(content)
         except Exception as e:
             logger.error("Failed to read audio")
-            logger.error(e)
+            logger.error(e, exc_info=True)
             return
 
         self.duration = signal.size()[-1] / sr
@@ -32,7 +32,7 @@ class AudioReader:
 
         logger.info(f"Signal shape {signal.shape}")
 
-        return signal.squeeze(0)
+        return signal
 
     @property
     def duration(self):

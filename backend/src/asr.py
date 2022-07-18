@@ -7,9 +7,12 @@ from typing import Union
 from src.logger import LogHandler
 
 
+N_JOBS = 10
+torch.set_num_threads(N_JOBS)
 logger = logging.getLogger(__file__)
 logger.setLevel('DEBUG')
 logger.addHandler(LogHandler())
+logger.info(f"Setting torch to use {N_JOBS} threads!")
 
 
 class ASR:

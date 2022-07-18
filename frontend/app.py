@@ -1,3 +1,3 @@
-from transcription import transcription, test
+from transcription import transcription
 
 transcription()

@@ -9,3 +9,5 @@ pyctcdecode==0.3.0
 https://github.com/kpu/kenlm/archive/master.zip
 python-multipart==0.0.5
 numpy==1.22.4
+gunicorn
+onnxruntime
