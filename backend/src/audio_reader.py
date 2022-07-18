@@ -2,12 +2,13 @@ import torch
 import torchaudio
 import logging
 
+from typing import Union
 from src.logger import LogHandler
 
 
-log = logging.getLogger(__file__)
-log.setLevel('DEBUG')
-log.addHandler(LogHandler())
+logger = logging.getLogger(__file__)
+logger.setLevel('DEBUG')
+logger.addHandler(LogHandler())
 
 
 class AudioReader:
@@ -15,18 +16,23 @@ class AudioReader:
         self.sampling_rate = 16_000
         self.duration = 0
 
-    def read_audio(self, content: bytes) -> torch.Tensor:
-        signal, sr = torchaudio.load(content)
+    def read_audio(self, content: bytes) -> Union[torch.Tensor, None]:
+        try:
+            signal, sr = torchaudio.load(content)
+        except Exception as e:
+            logger.error("Failed to read audio")
+            logger.error(e, exc_info=True)
+            return
 
         self.duration = signal.size()[-1] / sr
 
         if sr != self.sampling_rate:
-            log.info(f"Resampling from {sr} to {self.sampling_rate}")
+            logger.info(f"Resampling from {sr} to {self.sampling_rate}")
             signal = torchaudio.transforms.Resample(sr, self.sampling_rate)(signal)
 
-        log.info(f"Signal shape {signal.shape}")
+        logger.info(f"Signal shape {signal.shape}")
 
-        return signal.squeeze(0)
+        return signal
 
     @property
     def duration(self):

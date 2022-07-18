@@ -8,7 +8,10 @@ services:
       - ./backend:/backend
     ports:
       - "80:80"
-    command: uvicorn server:app --host 0.0.0.0 --port 80
+    # command: uvicorn server:app --host 0.0.0.0 --port 80 --reload
+    command: gunicorn server:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:80 --keep-alive 30
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
   frontend:
     container_name: frontend
     build:
@@ -16,6 +19,7 @@ services:
     volumes:
       - './frontend:/frontend'
     ports:
-      - 3000:3000
-    stdin_open: true
-    command: npm start
+      - "8501:8501"
+    command: streamlit run app.py
+    extra_hosts:
+    - "host.docker.internal:host-gateway"

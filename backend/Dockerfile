@@ -1,10 +1,13 @@
 FROM python:latest
 
 RUN python --version
+RUN pip install -U pip
 
 WORKDIR /backend
 
-# COPY . /backend
+COPY ./requirements.txt /backend/requirements.txt
+
+COPY . /backend
 
 RUN pip install -r /backend/requirements.txt
 

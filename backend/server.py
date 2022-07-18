@@ -1,19 +1,20 @@
 import io
 import logging
+import torch
 
+from typing import List, Union
+from datetime import datetime
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
 from src.logger import LogHandler
 from src.asr import ASR
 from src.audio_reader import AudioReader
 
 
-# log = logging.getLogger(__file__)
-log = logging.getLogger("root")
-log.setLevel('DEBUG')
-log.addHandler(LogHandler())
-app = FastAPI()
+logger = logging.getLogger(__file__)
+logger.setLevel('DEBUG')
+logger.addHandler(LogHandler())
+app = FastAPI(debug=True)
 origins = ["*"]
 
 
@@ -27,7 +28,7 @@ app.add_middleware(
 
 
 asr_model = ASR()
-audio_reader = AudioReader()
+# audio_reader = AudioReader()
 
 
 @app.get("/")
@@ -38,36 +39,40 @@ def home():
     }
 
 
-@app.post("/upload_file")
-async def create_upload_file(file: UploadFile):
-    # TODO
-    return {
-        "name": file.filename,
-    }
+def parse_audio_file(file: UploadFile) -> Union[torch.Tensor, None]:
+    audio_reader = AudioReader()
+    content = io.BytesIO(file.file.read())
+    logger.info(f"Preparing to read content: {content}")
+    signal = audio_reader.read_audio(content)
+    return signal
 
 
-@app.get("/list_files")
-async def list_files():
-    # TODO
-    return {
-        "date": datetime.now().strftime("%Y%m%d %H:%M:%S")
+@app.post("/read_audio")
+def read_audio(file: UploadFile = File(...)):
+    logger.info(f"Received {file.filename} at /read_audio")
+
+    signal = parse_audio_file(file)
+
+    response = {
+        "signal": signal.numpy().tolist(),
     }
+
+    return response
 
 
 @app.post("/transcript")
-async def transcript(file: UploadFile = File(...)):
-    content = io.BytesIO(file.file.read())
+def transcript(file: UploadFile = File(...)):
+    logger.info(f"Received {file.filename} at /transcript")
 
-    signal = audio_reader.read_audio(content)
-    duration = audio_reader.duration
-    transcription = asr_model.predict(signal)
+    signal = parse_audio_file(file)
+
+    transcription = asr_model.predict(signal.squeeze(0))
 
     response = {
-        "filename": file.filename,
-        "duration": duration,
         "transcription": transcription
     }
 
-    log.info(response)
+    logger.info(response)
 
     return response
+

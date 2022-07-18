@@ -1,15 +1,10 @@
-FROM node:latest
+FROM python:latest
 
-WORKDIR /frontend/transcription_webapp
+RUN python --version
+RUN pip install -U pip
 
-USER root
-
-ENV NODE_OPTIONS=--openssl-legacy-provider
+WORKDIR /frontend
 
 COPY . /frontend
 
-RUN npm --version
-
-RUN npm install axios
-
-CMD [ "npm", "start" ]
+RUN pip install -r /frontend/requirements.txt

@@ -7,9 +7,12 @@ from typing import Union
 from src.logger import LogHandler
 
 
-log = logging.getLogger(__file__)
-log.setLevel('DEBUG')
-log.addHandler(LogHandler())
+N_JOBS = 10
+torch.set_num_threads(N_JOBS)
+logger = logging.getLogger(__file__)
+logger.setLevel('DEBUG')
+logger.addHandler(LogHandler())
+logger.info(f"Setting torch to use {N_JOBS} threads!")
 
 
 class ASR:
@@ -19,11 +22,11 @@ class ASR:
         self.ACOUSTIC_MODEL_PATH = Path("/backend/ml_models/acoustic")
         self.PROCESSOR_MODEL_PATH = Path("/backend/ml_models/processor")
         self.load_model()
-        log.debug("ASR Model loaded!")
+        logger.debug("ASR Model loaded!")
 
     def load_model(self) -> None:
         if not self.ACOUSTIC_MODEL_PATH.exists() or not self.PROCESSOR_MODEL_PATH.exists():
-            log.error("Path to models does not exist. Exiting...")
+            logger.error("Path to models does not exist. Exiting...")
             return
         self.model = AutoModelForCTC.from_pretrained(
             self.ACOUSTIC_MODEL_PATH).to(self.device)
@@ -38,10 +41,10 @@ class ASR:
         with torch.no_grad():
             logits = self.model(**inputs).logits
 
-        log.debug("logits predicted")
+        logger.debug("logits predicted")
         transcription = self.processor.batch_decode(
             logits.cpu().numpy()).text[0]
 
-        log.debug("transcription predicted")
+        logger.debug("transcription predicted")
 
         return transcription
