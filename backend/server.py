@@ -1,7 +1,7 @@
 import io
 import logging
-import numpy as np
 
+from typing import List
 from datetime import datetime
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,9 +10,9 @@ from src.asr import ASR
 from src.audio_reader import AudioReader
 
 
-log = logging.getLogger(__file__)
-log.setLevel('DEBUG')
-log.addHandler(LogHandler())
+logger = logging.getLogger(__file__)
+logger.setLevel('DEBUG')
+logger.addHandler(LogHandler())
 app = FastAPI()
 origins = ["*"]
 
@@ -39,21 +39,25 @@ def home():
 
 
 @app.post("/read_audio")
-async def read_audio(file: UploadFile = File(...)) -> np.ndarray:
+async def read_audio(file: UploadFile = File(...)) -> List[List[int]]:
+    logger.info(f"Received {file.filename} at /read_audio")
+
     content = io.BytesIO(file.file.read())
 
     signal = audio_reader.read_audio(content).numpy()
 
     response = {
-        "signal": signal,
+        "signal": signal.tolist(),
     }
-    log.info(f"Audio shape: {signal.shape}")
+    logger.info(f"Audio shape: {signal.shape}")
 
     return response
 
 
 @app.post("/transcript")
 async def transcript(file: UploadFile = File(...)):
+    logger.info(f"Received {file.filename} at /transcript")
+
     content = io.BytesIO(file.file.read())
 
     signal = audio_reader.read_audio(content)
@@ -66,6 +70,6 @@ async def transcript(file: UploadFile = File(...)):
         "transcription": transcription
     }
 
-    log.info(response)
+    logger.info(response)
 
     return response
