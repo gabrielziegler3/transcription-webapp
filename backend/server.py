@@ -13,7 +13,7 @@ from src.audio_reader import AudioReader
 logger = logging.getLogger(__file__)
 logger.setLevel('DEBUG')
 logger.addHandler(LogHandler())
-app = FastAPI()
+app = FastAPI(debug=True)
 origins = ["*"]
 
 
