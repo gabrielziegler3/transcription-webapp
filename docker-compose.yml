@@ -4,8 +4,9 @@ services:
     container_name: backend
     build:
       context: ./backend
+    working_dir: /app/app
     volumes:
-      - ./backend:/backend
+      - ./backend:/app
     ports:
       - "80:80"
     # command: uvicorn server:app --host 0.0.0.0 --port 80 --reload
@@ -17,10 +18,11 @@ services:
     container_name: frontend
     build:
       context: ./frontend
+    working_dir: /app/app
     depends_on:
       - backend
     volumes:
-      - './frontend:/frontend'
+      - './frontend:/app'
     ports:
       - "8501:8501"
     command: streamlit run app.py

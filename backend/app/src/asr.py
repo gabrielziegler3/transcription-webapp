@@ -19,8 +19,8 @@ class ASR:
     def __init__(self):
         self.device = "cpu"
         self.sampling_rate = 16_000
-        self.ACOUSTIC_MODEL_PATH = Path("/backend/ml_models/acoustic")
-        self.PROCESSOR_MODEL_PATH = Path("/backend/ml_models/processor")
+        self.ACOUSTIC_MODEL_PATH = Path("/app/app/ml_models/acoustic")
+        self.PROCESSOR_MODEL_PATH = Path("/app/app/ml_models/processor")
         self.load_model()
         logger.debug("ASR Model loaded!")
 

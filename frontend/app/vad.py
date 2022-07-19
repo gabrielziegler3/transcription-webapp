@@ -27,7 +27,7 @@ def voice_activity_detection():
 
     audio = read_audio(uploaded_file)
     plot_waveform(audio)
-    speech_timestamps = get_speech_timestamps()
+    speech_timestamps = get_speech_timestamps(uploaded_file)
     st.write(speech_timestamps)
 
 

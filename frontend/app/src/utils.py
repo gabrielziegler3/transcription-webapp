@@ -39,11 +39,11 @@ def read_audio(file: io.BytesIO) -> np.ndarray:
 
 
 def plot_waveform(audio: np.ndarray):
-    x = np.arange(0, audio.flatten().shape()[0]) / SAMPLING_RATE
+    x = np.arange(0, audio.flatten().shape[0]) / SAMPLING_RATE
     y = audio.flatten()
 
     fig = px.line(x=x, y=y, title="Waveform")
-    fig.update_xaxes(
+    fig.update_layout(
         xaxis_title="Time (s)",
         yaxis_title="Amplitude",
     )

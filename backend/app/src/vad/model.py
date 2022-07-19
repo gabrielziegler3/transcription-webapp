@@ -16,7 +16,7 @@ class VAD:
         self.min_speech_duration_ms = 350
         self.threshold = 0.4
         self.sampling_rate = 16_000
-        self.MODEL_DIR = Path("/backend/ml_models/vad/")
+        self.MODEL_DIR = Path("/app/app/ml_models/vad/")
         self.model = self.load_model(onnx=True)
 
     def load_model(self, onnx=True):

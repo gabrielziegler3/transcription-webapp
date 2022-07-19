@@ -8,7 +8,7 @@ WORKDIR /app
 
 COPY ./requirements.txt /tmp/requirements.txt
 
-COPY ./app /app
+COPY ./app /
 
 RUN pip install -r /tmp/requirements.txt
 
