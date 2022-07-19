@@ -23,6 +23,6 @@ services:
       - './frontend:/frontend'
     ports:
       - "8501:8501"
-    command: streamlit run app/app.py
+    command: streamlit run app.py
     extra_hosts:
     - "host.docker.internal:host-gateway"
