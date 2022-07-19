@@ -8,6 +8,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from src.logger import LogHandler
 from src.asr import ASR
+from src.vad.model import VAD
 from src.audio_reader import AudioReader
 
 
@@ -28,19 +29,18 @@ app.add_middleware(
 
 
 asr_model = ASR()
-# audio_reader = AudioReader()
+vad = VAD()
+audio_reader = AudioReader()
 
 
 @app.get("/")
 def home():
     return {
-        "Hello": "World",
         "date": datetime.now().strftime("%Y%m%d %H:%M:%S")
     }
 
 
 def parse_audio_file(file: UploadFile) -> Union[torch.Tensor, None]:
-    audio_reader = AudioReader()
     content = io.BytesIO(file.file.read())
     logger.info(f"Preparing to read content: {content}")
     signal = audio_reader.read_audio(content)
@@ -55,6 +55,20 @@ def read_audio(file: UploadFile = File(...)):
 
     response = {
         "signal": signal.numpy().tolist(),
+    }
+
+    return response
+
+
+@app.post("/get_speech_timestamps")
+def get_speech_timestamps(file: UploadFile = File(...)):
+    logger.info(f"Received {file.filename} at /get_speech_timestamps")
+    signal = parse_audio_file(file)
+
+    speech_timestamps = vad.predict(signal)
+
+    response = {
+        "speech_timestamps": speech_timestamps,
     }
 
     return response
@@ -75,4 +89,3 @@ def transcript(file: UploadFile = File(...)):
     logger.info(response)
 
     return response
-

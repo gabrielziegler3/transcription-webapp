@@ -1,32 +1,43 @@
 import torch
+import logging
 
 from pathlib import Path
-from src.logger import logger
-from src.vad.utils import get_speech_timestamps
+from src.vad.utils import get_speech_timestamps, OnnxWrapper, init_jit_model
+from src.logger import LogHandler
 
 
+logger = logging.getLogger(__file__)
+logger.setLevel('DEBUG')
+logger.addHandler(LogHandler())
 
 
 class VAD:
     def __init__(self):
-        self.model = self.load_model(onnx=True)
-        self.min_speech_duration = 350
+        self.min_speech_duration_ms = 350
         self.threshold = 0.4
         self.sampling_rate = 16_000
         self.MODEL_DIR = Path("/backend/ml_models/vad/")
+        self.model = self.load_model(onnx=True)
 
     def load_model(self, onnx=True):
         logger.debug("Loading VAD model")
-        try:
-            model, _ = torch.hub.load(repo_or_dir=self.MODEL_DIR,
-                                      model='silero_vad',
-                                      force_reload=False,
-                                      onnx=onnx)
-            logger.debug("VAD loaded successfully")
-        except Exception as e:
-            logger.error("Error when loading VAD model")
-            logger.error(e)
-            raise e
+
+        if onnx:
+            try:
+                model = OnnxWrapper(str(self.MODEL_DIR / 'silero_vad.onnx'))
+                logger.debug("ONNX VAD loaded successfully")
+            except Exception as e:
+                logger.error("Error when loading VAD model from ONNX")
+                logger.error(e, exc_info=True)
+                raise e
+        else:
+            try:
+                model, _ = init_jit_model()(str(self.MODEL_DIR / 'silero_vad.jit'))
+                logger.debug("JIT VAD loaded successfully")
+            except Exception as e:
+                logger.error("Error when loading VAD model from JIT")
+                logger.error(e, exc_info=True)
+                raise e
 
         return model
 

@@ -20,7 +20,6 @@ def test():
     logger.info(f"Response: {response.content}")
     st.write(response.content)
 
-
 def _read_audio(file: io.BytesIO) -> np.ndarray:
     endpoint = SERVER_URL + "read_audio"
 
