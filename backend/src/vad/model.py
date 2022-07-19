@@ -32,7 +32,7 @@ class VAD:
                 raise e
         else:
             try:
-                model, _ = init_jit_model()(str(self.MODEL_DIR / 'silero_vad.jit'))
+                model, _ = init_jit_model(str(self.MODEL_DIR / 'silero_vad.jit'))
                 logger.debug("JIT VAD loaded successfully")
             except Exception as e:
                 logger.error("Error when loading VAD model from JIT")

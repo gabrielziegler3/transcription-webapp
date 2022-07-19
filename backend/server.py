@@ -48,7 +48,7 @@ def parse_audio_file(file: UploadFile) -> Union[torch.Tensor, None]:
 
 
 @app.post("/read_audio")
-def read_audio(file: UploadFile = File(...)):
+async def read_audio(file: UploadFile = File(...)):
     logger.info(f"Received {file.filename} at /read_audio")
 
     signal = parse_audio_file(file)
@@ -61,7 +61,7 @@ def read_audio(file: UploadFile = File(...)):
 
 
 @app.post("/get_speech_timestamps")
-def get_speech_timestamps(file: UploadFile = File(...)):
+async def get_speech_timestamps(file: UploadFile = File(...)):
     logger.info(f"Received {file.filename} at /get_speech_timestamps")
     signal = parse_audio_file(file)
 
@@ -75,7 +75,7 @@ def get_speech_timestamps(file: UploadFile = File(...)):
 
 
 @app.post("/transcript")
-def transcript(file: UploadFile = File(...)):
+async def transcript(file: UploadFile = File(...)):
     logger.info(f"Received {file.filename} at /transcript")
 
     signal = parse_audio_file(file)
