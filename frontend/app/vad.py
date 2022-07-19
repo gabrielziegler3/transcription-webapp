@@ -1,44 +1,16 @@
-import io
 import streamlit as st
 import logging
 import json
-import numpy as np
 import httpx
 
-
 from src.logger import LogHandler
-from src.custom_plots import plot_line
+from src.utils import read_audio, plot_waveform
 
 
 logger = logging.getLogger(__file__)
 logger.setLevel('DEBUG')
 logger.addHandler(LogHandler())
 SERVER_URL = "http://host.docker.internal:80/"
-
-
-def _read_audio(file: io.BytesIO) -> np.ndarray:
-    endpoint = SERVER_URL + "read_audio"
-
-    payload = {
-        "file": file
-    }
-
-    logger.info(f"Sending request with {file} to {endpoint}")
-    response = httpx.post(
-        url=endpoint,
-        files=payload,
-        # headers=headers
-    )
-    if response.status_code != 200:
-        logger.info(f"Couldn't read audio. Received {response.status_code} status code")
-
-    signal = json.loads(response.content)["signal"]
-    audio = np.array(signal)
-
-    logger.info(audio)
-    logger.info(f"Audio with shape {audio.shape} read")
-
-    return audio
 
 
 def voice_activity_detection():
@@ -53,8 +25,8 @@ def voice_activity_detection():
     if not uploaded_file:
         return
 
-    audio = _read_audio(uploaded_file)
-    plot_line(x=range(len(audio.flatten())), y=audio.flatten())
+    audio = read_audio(uploaded_file)
+    plot_waveform(audio)
     speech_timestamps = get_speech_timestamps()
     st.write(speech_timestamps)
 
