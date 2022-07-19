@@ -1,32 +1,23 @@
 import logging
 import streamlit as st
-import httpx
 import json
+import asyncio
 
 from src.logger import LogHandler
 from src.utils import read_audio, plot_waveform
+from src.async_client import server_client
 
 
 logger = logging.getLogger(__file__)
-logger.setLevel('DEBUG')
+# logger.setLevel('DEBUG')
 logger.addHandler(LogHandler())
 SERVER_URL = "http://host.docker.internal:80/"
 
 
-def test():
-    response = httpx.get(url=SERVER_URL)
-    logger.info(f"Response: {response.content}")
-    st.write(response.content)
-
-
-def transcription():
+async def transcription():
     endpoint = SERVER_URL + "transcript"
 
     st.title('Transcription')
-
-    st.sidebar.title("Services")
-    st.sidebar.button("Transcription API")
-    st.sidebar.button("Real Time Transcription")
 
     uploaded_file = st.file_uploader("Choose a file")
 
@@ -41,7 +32,8 @@ def transcription():
     payload = {"file": uploaded_file}
 
     logger.info(f"Sending request with {uploaded_file} to {endpoint}")
-    response = httpx.post(
+
+    response = await server_client.post(
         url=endpoint,
         files=payload,
     )
@@ -50,6 +42,10 @@ def transcription():
         logger.warn(f"Status {response.status_code} received. Error attempting transcription API")
         return
 
-    transc = json.loads(response.content)["transcription"]
+    transc = json.loads(response.text)["transcription"]
     logger.info(f"Transcription: {transc}")
     st.write(transc)
+
+
+if __name__ == "__main__":
+    asyncio.run(transcription())

@@ -16,10 +16,6 @@ SERVER_URL = "http://host.docker.internal:80/"
 def voice_activity_detection():
     st.title('Voice activity detection')
 
-    st.sidebar.title("Services")
-    st.sidebar.button("Transcription API")
-    st.sidebar.button("Real Time Transcription")
-
     uploaded_file = st.file_uploader("Choose a file")
 
     if not uploaded_file:
@@ -28,6 +24,8 @@ def voice_activity_detection():
     audio = read_audio(uploaded_file)
     plot_waveform(audio)
     speech_timestamps = get_speech_timestamps(uploaded_file)
+
+    st.audio(audio)
     st.write(speech_timestamps)
 
 
@@ -55,3 +53,7 @@ def get_speech_timestamps(file):
 
     speech_timestamps = json.loads(response.content)["speech_timestamps"]
     return speech_timestamps
+
+
+if __name__ == "__main__":
+    voice_activity_detection()
