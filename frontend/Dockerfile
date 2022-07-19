@@ -3,8 +3,10 @@ FROM python:latest
 RUN python --version
 RUN pip install -U pip
 
-WORKDIR /frontend
+WORKDIR /app
 
-COPY . /frontend
+COPY ./requirements.txt /tmp/requirements.txt
 
-RUN pip install -r /frontend/requirements.txt
+COPY ./app /app
+
+RUN pip install --no-cache-dir -r /tmp/requirements.txt

@@ -41,9 +41,7 @@ def _read_audio(file: io.BytesIO) -> np.ndarray:
     return audio
 
 
-def get_speech_timestamps():
-    endpoint = SERVER_URL + "get_speech_timestamps"
-
+def voice_activity_detection():
     st.title('Voice activity detection')
 
     st.sidebar.title("Services")
@@ -57,12 +55,21 @@ def get_speech_timestamps():
 
     audio = _read_audio(uploaded_file)
     plot_line(x=range(len(audio.flatten())), y=audio.flatten())
+    speech_timestamps = get_speech_timestamps()
+    st.write(speech_timestamps)
+
+
+def get_speech_timestamps(file):
+    """
+    Client to send request with audio file to receive speech timestamps
+    """
+    endpoint = SERVER_URL + "get_speech_timestamps"
 
     payload = {
-        "file": uploaded_file
+        "file": file
     }
 
-    logger.info(f"Sending request with {uploaded_file} to {endpoint}")
+    logger.info(f"Sending request with {file} to {endpoint}")
     response = httpx.post(
         url=endpoint,
         files=payload,
@@ -75,4 +82,4 @@ def get_speech_timestamps():
     logger.debug(f"Speech timestamps {response.content}")
 
     speech_timestamps = json.loads(response.content)["speech_timestamps"]
-    st.write(speech_timestamps)
+    return speech_timestamps
