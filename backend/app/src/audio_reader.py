@@ -18,7 +18,7 @@ class AudioReader:
 
     def read_audio(self, content: bytes) -> Union[torch.Tensor, None]:
         try:
-            signal, sr = torchaudio.load(content)
+            signal, sr = torchaudio.load(content, normalize=True)
         except Exception as e:
             logger.error("Failed to read audio")
             logger.error(e, exc_info=True)

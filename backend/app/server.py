@@ -28,7 +28,7 @@ app.add_middleware(
 )
 
 
-asr_model = ASR()
+# asr_model = ASR()
 vad = VAD()
 audio_reader = AudioReader()
 
@@ -80,7 +80,8 @@ async def transcript(file: UploadFile = File(...)):
 
     signal = parse_audio_file(file)
 
-    transcription = asr_model.predict(signal.squeeze(0))
+    # transcription = asr_model.predict(signal.squeeze(0))
+    transcription = "hello world"
 
     response = {
         "transcription": transcription
