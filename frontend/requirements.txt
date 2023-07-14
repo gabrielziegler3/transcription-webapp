@@ -1,4 +1,5 @@
-streamlit
+streamlit==1.24.1
 plotly==5.5.0
 numpy>=1.22.4
-httpx==0.23.0
+httpx==0.24.1
+pytest==7.4.0

@@ -4,7 +4,7 @@ import torch
 
 from typing import List, Union
 from datetime import datetime
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from src.logger import LogHandler
 from src.asr import ASR
@@ -41,10 +41,18 @@ def home():
 
 
 def parse_audio_file(file: UploadFile) -> Union[torch.Tensor, None]:
-    content = io.BytesIO(file.file.read())
-    logger.info(f"Preparing to read content: {content}")
-    signal = audio_reader.read_audio(content)
-    return signal
+    try:
+        content = io.BytesIO(file.file.read())
+        logger.info(f"Preparing to read content: {content}")
+        signal = audio_reader.read_audio(content)
+        return signal
+    except Exception as e:
+        logger.warning(f"Failed to parse audio file: {file.filename}")
+        # logger.warning(e, exc_info=True)
+        raise HTTPException(
+            status_code=400, 
+            detail="Failed to parse audio file. Please make sure the file is a valid audio file."
+        )
 
 
 @app.post("/read_audio")

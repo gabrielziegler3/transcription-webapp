@@ -2,6 +2,7 @@ fastapi==0.78.0
 uvicorn[standard]==0.17.6
 python-multipart==0.0.5
 numpy==1.22.4
-gunicorn
-onnxruntime
-pytest
+gunicorn==20.1.0
+onnxruntime==1.15.1
+pytest==7.4.0
+httpx==0.24.1
