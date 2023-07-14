@@ -1,32 +1,33 @@
 # https://github.com/snakers4/silero-vad/blob/master/utils_vad.py
-import onnxruntime
 import torch
 import torchaudio
-import numpy as np
+from typing import Callable, List
 import torch.nn.functional as F
 import warnings
-
-from typing import List
-
 
 languages = ['ru', 'en', 'de', 'es']
 
 
 class OnnxWrapper():
 
-    def __init__(self, path):
+    def __init__(self, path, force_onnx_cpu=False):
+        import numpy as np
         global np
-        self.session = onnxruntime.InferenceSession(path)
-        self.session.intra_op_num_threads = 1
-        self.session.inter_op_num_threads = 1
+        import onnxruntime
+
+        opts = onnxruntime.SessionOptions()
+        opts.inter_op_num_threads = 1
+        opts.intra_op_num_threads = 1
+
+        if force_onnx_cpu and 'CPUExecutionProvider' in onnxruntime.get_available_providers():
+            self.session = onnxruntime.InferenceSession(path, providers=['CPUExecutionProvider'], sess_options=opts)
+        else:
+            self.session = onnxruntime.InferenceSession(path, sess_options=opts)
 
         self.reset_states()
+        self.sample_rates = [8000, 16000]
 
-    def reset_states(self):
-        self._h = np.zeros((2, 1, 64)).astype('float32')
-        self._c = np.zeros((2, 1, 64)).astype('float32')
-
-    def __call__(self, x, sr: int):
+    def _validate_input(self, x, sr: int):
         if x.dim() == 1:
             x = x.unsqueeze(0)
         if x.dim() > 2:
@@ -34,33 +35,76 @@ class OnnxWrapper():
 
         if sr != 16000 and (sr % 16000 == 0):
             step = sr // 16000
-            x = x[::step]
+            x = x[:,::step]
             sr = 16000
 
-        if x.shape[0] > 1:
-            raise ValueError("Onnx model does not support batching")
-
-        if sr not in [16000]:
-            raise ValueError(f"Supported sample rates: {[16000]}")
+        if sr not in self.sample_rates:
+            raise ValueError(f"Supported sampling rates: {self.sample_rates} (or multiply of 16000)")
 
         if sr / x.shape[1] > 31.25:
             raise ValueError("Input audio chunk is too short")
 
-        ort_inputs = {'input': x.numpy(), 'h0': self._h, 'c0': self._c}
-        ort_outs = self.session.run(None, ort_inputs)
-        out, self._h, self._c = ort_outs
+        return x, sr
 
-        out = torch.tensor(out).squeeze(2)[:, 1]  # make output type match JIT analog
+    def reset_states(self, batch_size=1):
+        self._h = np.zeros((2, batch_size, 64)).astype('float32')
+        self._c = np.zeros((2, batch_size, 64)).astype('float32')
+        self._last_sr = 0
+        self._last_batch_size = 0
 
+    def __call__(self, x, sr: int):
+
+        x, sr = self._validate_input(x, sr)
+        batch_size = x.shape[0]
+
+        if not self._last_batch_size:
+            self.reset_states(batch_size)
+        if (self._last_sr) and (self._last_sr != sr):
+            self.reset_states(batch_size)
+        if (self._last_batch_size) and (self._last_batch_size != batch_size):
+            self.reset_states(batch_size)
+
+        if sr in [8000, 16000]:
+            ort_inputs = {'input': x.numpy(), 'h': self._h, 'c': self._c, 'sr': np.array(sr, dtype='int64')}
+            ort_outs = self.session.run(None, ort_inputs)
+            out, self._h, self._c = ort_outs
+        else:
+            raise ValueError()
+
+        self._last_sr = sr
+        self._last_batch_size = batch_size
+
+        out = torch.tensor(out)
         return out
+
+    def audio_forward(self, x, sr: int, num_samples: int = 512):
+        outs = []
+        x, sr = self._validate_input(x, sr)
+
+        if x.shape[1] % num_samples:
+            pad_num = num_samples - (x.shape[1] % num_samples)
+            x = torch.nn.functional.pad(x, (0, pad_num), 'constant', value=0.0)
+
+        self.reset_states(x.shape[0])
+        for i in range(0, x.shape[1], num_samples):
+            wavs_batch = x[:, i:i+num_samples]
+            out_chunk = self.__call__(wavs_batch, sr)
+            outs.append(out_chunk)
+
+        stacked = torch.cat(outs, dim=1)
+        return stacked.cpu()
 
 
 class Validator():
-    def __init__(self, url):
+    def __init__(self, url, force_onnx_cpu):
         self.onnx = True if url.endswith('.onnx') else False
         torch.hub.download_url_to_file(url, 'inf.model')
         if self.onnx:
-            self.model = onnxruntime.InferenceSession('inf.model')
+            import onnxruntime
+            if force_onnx_cpu and 'CPUExecutionProvider' in onnxruntime.get_available_providers():
+                self.model = onnxruntime.InferenceSession('inf.model', providers=['CPUExecutionProvider'])
+            else:
+                self.model = onnxruntime.InferenceSession('inf.model')
         else:
             self.model = init_jit_model(model_path='inf.model')
 
@@ -97,7 +141,7 @@ def read_audio(path: str,
 def save_audio(path: str,
                tensor: torch.Tensor,
                sampling_rate: int = 16000):
-    torchaudio.save(path, tensor.unsqueeze(0), sampling_rate)
+    torchaudio.save(path, tensor.unsqueeze(0), sampling_rate, bits_per_sample=16)
 
 
 def init_jit_model(model_path: str,
@@ -123,11 +167,13 @@ def get_speech_timestamps(audio: torch.Tensor,
                           threshold: float = 0.5,
                           sampling_rate: int = 16000,
                           min_speech_duration_ms: int = 250,
+                          max_speech_duration_s: float = float('inf'),
                           min_silence_duration_ms: int = 100,
-                          window_size_samples: int = 1536,
+                          window_size_samples: int = 512,
                           speech_pad_ms: int = 30,
                           return_seconds: bool = False,
-                          visualize_probs: bool = False):
+                          visualize_probs: bool = False,
+                          progress_tracking_callback: Callable[[float], None] = None):
 
     """
     This method is used for splitting long audios into speech chunks using silero VAD
@@ -149,6 +195,11 @@ def get_speech_timestamps(audio: torch.Tensor,
     min_speech_duration_ms: int (default - 250 milliseconds)
         Final speech chunks shorter min_speech_duration_ms are thrown out
 
+    max_speech_duration_s: int (default -  inf)
+        Maximum duration of speech chunks in seconds
+        Chunks longer than max_speech_duration_s will be split at the timestamp of the last silence that lasts more than 100ms (if any), to prevent agressive cutting.
+        Otherwise, they will be split aggressively just before max_speech_duration_s.
+
     min_silence_duration_ms: int (default - 100 milliseconds)
         In the end of each speech chunk wait for min_silence_duration_ms before separating it
 
@@ -165,6 +216,9 @@ def get_speech_timestamps(audio: torch.Tensor,
 
     visualize_probs: bool (default - False)
         whether draw prob hist or not
+
+    progress_tracking_callback: Callable[[float], None] (default - None)
+        callback function taking progress in percents as an argument
 
     Returns
     ----------
@@ -199,8 +253,10 @@ def get_speech_timestamps(audio: torch.Tensor,
 
     model.reset_states()
     min_speech_samples = sampling_rate * min_speech_duration_ms / 1000
-    min_silence_samples = sampling_rate * min_silence_duration_ms / 1000
     speech_pad_samples = sampling_rate * speech_pad_ms / 1000
+    max_speech_samples = sampling_rate * max_speech_duration_s - window_size_samples - 2 * speech_pad_samples
+    min_silence_samples = sampling_rate * min_silence_duration_ms / 1000
+    min_silence_samples_at_max_speech = sampling_rate * 98 / 1000
 
     audio_length_samples = len(audio)
 
@@ -211,33 +267,63 @@ def get_speech_timestamps(audio: torch.Tensor,
             chunk = torch.nn.functional.pad(chunk, (0, int(window_size_samples - len(chunk))))
         speech_prob = model(chunk, sampling_rate).item()
         speech_probs.append(speech_prob)
+        # caculate progress and seng it to callback function
+        progress = current_start_sample + window_size_samples
+        if progress > audio_length_samples:
+            progress = audio_length_samples
+        progress_percent = (progress / audio_length_samples) * 100
+        if progress_tracking_callback:
+            progress_tracking_callback(progress_percent)
 
     triggered = False
     speeches = []
     current_speech = {}
     neg_threshold = threshold - 0.15
-    temp_end = 0
+    temp_end = 0 # to save potential segment end (and tolerate some silence)
+    prev_end = next_start = 0 # to save potential segment limits in case of maximum segment size reached
 
     for i, speech_prob in enumerate(speech_probs):
         if (speech_prob >= threshold) and temp_end:
             temp_end = 0
+            if next_start < prev_end:
+               next_start = window_size_samples * i
 
         if (speech_prob >= threshold) and not triggered:
             triggered = True
             current_speech['start'] = window_size_samples * i
             continue
 
+        if triggered and (window_size_samples * i) - current_speech['start'] > max_speech_samples:
+            if prev_end:
+                current_speech['end'] = prev_end
+                speeches.append(current_speech)
+                current_speech = {}
+                if next_start < prev_end: # previously reached silence (< neg_thres) and is still not speech (< thres)
+                    triggered = False
+                else:
+                    current_speech['start'] = next_start
+                prev_end = next_start = temp_end = 0
+            else:
+                current_speech['end'] = window_size_samples * i
+                speeches.append(current_speech)
+                current_speech = {}
+                prev_end = next_start = temp_end = 0
+                triggered = False
+                continue
+
         if (speech_prob < neg_threshold) and triggered:
             if not temp_end:
                 temp_end = window_size_samples * i
+            if ((window_size_samples * i) - temp_end) > min_silence_samples_at_max_speech : # condition to avoid cutting in very short silence
+                prev_end = temp_end
             if (window_size_samples * i) - temp_end < min_silence_samples:
                 continue
             else:
                 current_speech['end'] = temp_end
                 if (current_speech['end'] - current_speech['start']) > min_speech_samples:
                     speeches.append(current_speech)
-                temp_end = 0
                 current_speech = {}
+                prev_end = next_start = temp_end = 0
                 triggered = False
                 continue
 
