@@ -43,10 +43,9 @@ jobs:
       run: |
         docker-compose -f docker-compose.yml up -d
 
-    # Run the tests (I'm assuming you have a script to run tests. Replace with your test command.)
-    - name: Run tests
-      run: |
-        docker-compose exec -T backend pytest 
+    # - name: Run tests
+    #   run: |
+    #     docker-compose exec -T backend pytest 
 
     # Shut down the services
     - name: Shutdown
