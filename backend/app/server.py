@@ -2,9 +2,10 @@ import io
 import logging
 import torch
 import os
+import boto3
 
-from minio import Minio
-from typing import List, Union
+from botocore.client import Config
+from typing import Union
 from datetime import datetime
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,18 +21,24 @@ logger.addHandler(LogHandler())
 app = FastAPI(debug=True)
 origins = ["*"]
 
-# Connect to MinIO
-minio_client = Minio('minio:9000',
-                    access_key='minio',
-                    secret_key='minio123',
-                    secure=False)
 
-bucket_found = minio_client.bucket_exists("audios")
-if not bucket_found:
-    minio_client.make_bucket("audios")
+# Connect to MinIO
+s3 = boto3.resource('s3',
+                    endpoint_url='http://minio:9000',
+                    aws_access_key_id='minio',
+                    aws_secret_access_key='minio123',
+                    region_name='us-east-1')
+
+
+# Create bucket if is doesn't exist
+if s3.Bucket('audios') not in s3.buckets.all():
+    s3.create_bucket(Bucket='audios')
     logger.debug("Bucket 'audios' created successfully.")
 else:
     logger.warning("Bucket 'audios' already exists. Skipping bucket creation.")
+
+
+bucket = s3.Bucket('audios')
 
 
 app.add_middleware(
@@ -59,9 +66,7 @@ def home():
 def upload_file(file: UploadFile = File(...)):
     try:
         logger.debug(f"Received file {file.filename} at /upload_file")
-
-        file_size = os.fstat(file.file.fileno()).st_size
-        minio_client.put_object("audios", file.filename, file.file, file_size)
+        bucket.upload_fileobj(file.file, file.filename)
         logger.debug("File inserted to bucket 'audios'")
 
         return {"message": "File uploaded successfully"}
