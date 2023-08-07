@@ -1,13 +1,15 @@
 import io
 import logging
 import torch
+import os
 
+from minio import Minio
 from typing import List, Union
 from datetime import datetime
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from src.logger import LogHandler
-from src.asr import ASR
+# from src.asr import ASR
 from src.vad.model import VAD
 from src.audio_reader import AudioReader
 
@@ -17,6 +19,19 @@ logger.setLevel('DEBUG')
 logger.addHandler(LogHandler())
 app = FastAPI(debug=True)
 origins = ["*"]
+
+# Connect to MinIO
+minio_client = Minio('minio:9000',
+                    access_key='minio',
+                    secret_key='minio123',
+                    secure=False)
+
+bucket_found = minio_client.bucket_exists("audios")
+if not bucket_found:
+    minio_client.make_bucket("audios")
+    logger.debug("Bucket 'audios' created successfully.")
+else:
+    logger.warning("Bucket 'audios' already exists. Skipping bucket creation.")
 
 
 app.add_middleware(
@@ -38,6 +53,21 @@ def home():
     return {
         "date": datetime.now().strftime("%Y%m%d %H:%M:%S")
     }
+
+
+@app.post("/upload_file")
+def upload_file(file: UploadFile = File(...)):
+    try:
+        logger.debug(f"Received file {file.filename} at /upload_file")
+
+        file_size = os.fstat(file.file.fileno()).st_size
+        minio_client.put_object("audios", file.filename, file.file, file_size)
+        logger.debug("File inserted to bucket 'audios'")
+
+        return {"message": "File uploaded successfully"}
+    except Exception as e:
+        logger.warning(f"Failed to upload file {file.filename} to bucket 'audios' {e}")
+        return {"message": "File upload failed"}
 
 
 def parse_audio_file(file: UploadFile) -> Union[torch.Tensor, None]:
