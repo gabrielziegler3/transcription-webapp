@@ -21,24 +21,18 @@ logger.addHandler(LogHandler())
 app = FastAPI(debug=True)
 origins = ["*"]
 
+session = boto3.session.Session()
 
-# Connect to MinIO
-s3 = boto3.resource('s3',
-                    endpoint_url='http://minio:9000',
-                    aws_access_key_id='minio',
-                    aws_secret_access_key='minio123',
-                    region_name='us-east-1')
-
-
-# Create bucket if is doesn't exist
-if s3.Bucket('audios') not in s3.buckets.all():
-    s3.create_bucket(Bucket='audios')
-    logger.debug("Bucket 'audios' created successfully.")
-else:
-    logger.warning("Bucket 'audios' already exists. Skipping bucket creation.")
-
-
-bucket = s3.Bucket('audios')
+s3_client = session.client(
+    service_name='s3',
+    aws_access_key_id='minio',
+    aws_secret_access_key='minio123',
+    endpoint_url='http://minio:9000',
+    config=Config(signature_version='s3v4'),
+)
+bucket_name = 'audios'
+if s3_client.head_bucket(Bucket=bucket_name) is False:
+    s3_client.create_bucket(Bucket=bucket_name)
 
 
 app.add_middleware(
@@ -66,7 +60,7 @@ def home():
 def upload_file(file: UploadFile = File(...)):
     try:
         logger.debug(f"Received file {file.filename} at /upload_file")
-        bucket.upload_fileobj(file.file, file.filename)
+        s3_client.upload_fileobj(file.file, bucket_name, file.filename)
         logger.debug("File inserted to bucket 'audios'")
 
         return {"message": "File uploaded successfully"}
