@@ -1,6 +1,6 @@
 import streamlit as st
-from endpoints.Voice_Activity_Detection import voice_activity_detection
-from endpoints.Upload_File import upload_file
+from pages.Voice_Activity_Detection import voice_activity_detection
+from pages.Upload_File import upload_file
 
 
 def home():
