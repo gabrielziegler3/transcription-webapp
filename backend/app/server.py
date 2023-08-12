@@ -1,7 +1,6 @@
 import io
 import logging
 import torch
-import os
 import boto3
 
 from botocore.client import Config
@@ -21,18 +20,16 @@ logger.addHandler(LogHandler())
 app = FastAPI(debug=True)
 origins = ["*"]
 
+BUCKET_AUDIOS = "audios"
 session = boto3.session.Session()
 
 s3_client = session.client(
     service_name='s3',
-    aws_access_key_id='minio',
-    aws_secret_access_key='minio123',
-    endpoint_url='http://minio:9000',
+    aws_access_key_id='test',
+    aws_secret_access_key='test',
+    endpoint_url='http://localstack:4566',
     config=Config(signature_version='s3v4'),
 )
-bucket_name = 'audios'
-if s3_client.head_bucket(Bucket=bucket_name) is False:
-    s3_client.create_bucket(Bucket=bucket_name)
 
 
 app.add_middleware(
@@ -60,12 +57,13 @@ def home():
 def upload_file(file: UploadFile = File(...)):
     try:
         logger.debug(f"Received file {file.filename} at /upload_file")
-        s3_client.upload_fileobj(file.file, bucket_name, file.filename)
+        s3_client.upload_fileobj(file.file, BUCKET_AUDIOS, file.filename)
         logger.debug("File inserted to bucket 'audios'")
 
         return {"message": "File uploaded successfully"}
     except Exception as e:
-        logger.warning(f"Failed to upload file {file.filename} to bucket 'audios' {e}")
+        logger.warning(
+            f"Failed to upload file {file.filename} to bucket 'audios' {e}")
         return {"message": "File upload failed"}
 
 
@@ -79,7 +77,7 @@ def parse_audio_file(file: UploadFile) -> Union[torch.Tensor, None]:
         logger.warning(f"Failed to parse audio file: {file.filename}")
         # logger.warning(e, exc_info=True)
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Failed to parse audio file. Please make sure the file is a valid audio file."
         )
 

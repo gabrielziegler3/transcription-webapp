@@ -1,9 +1,0 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'CloudFormation template for creating an SQS Queue'
-
-Resources:
-  MySQSQueue:
-    Type: 'AWS::SQS::Queue'
-    Properties:
-      QueueName: 'MyQueue'
-      VisibilityTimeout: 30
