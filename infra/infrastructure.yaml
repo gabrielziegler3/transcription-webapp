@@ -1,0 +1,10 @@
+Resources:
+  MyQueue:
+    Type: "AWS::SQS::Queue"
+    Properties: 
+      QueueName: "upload-file-sqs"
+
+  MyBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "audios"
