@@ -1,10 +1,25 @@
 Resources:
-  MyQueue:
+  UploadFileSQS:
     Type: "AWS::SQS::Queue"
     Properties: 
       QueueName: "upload-file-sqs"
 
-  MyBucket:
+  BucketLambda:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "lambda-bucket"
+
+  BucketAudios:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: "audios"
+  
+  ProcessS3EventFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "handler.lambda_handler"
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref BucketLambda
+        S3Key: "lambda.zip"
+      Runtime: "python3.8"

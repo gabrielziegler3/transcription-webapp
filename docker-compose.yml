@@ -21,20 +21,6 @@ services:
       localstack:
         condition: service_healthy
 
-  # minio:
-  #   image: minio/minio:latest
-  #   container_name: minio
-  #   volumes:
-  #     - minio_data:/data
-  #   ports:
-  #     - "9000:9000"
-  #   environment:
-  #     MINIO_ROOT_USER: minio
-  #     MINIO_ROOT_PASSWORD: minio123
-  #   command: server /data
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway"
-
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
     image: localstack/localstack
@@ -43,15 +29,12 @@ services:
       - "4510-4559:4510-4559"  # external services port range
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
-      # - LOCALSTACK_HOST=host.docker.internal
-      # - AWS_DEFAULT_REGION=us-east-1
-      # - AWS_ACCESS_KEY_ID=test
-      # - AWS_SECRET_ACCESS_KEY=test
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
       - ./infra:/infra
       - ./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+      - ./lambda:/lambda
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
@@ -75,6 +58,3 @@ services:
     command: streamlit run Home.py
     extra_hosts:
     - "host.docker.internal:host-gateway"
-
-# volumes:
-#   minio_data:
