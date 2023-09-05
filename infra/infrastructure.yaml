@@ -14,6 +14,11 @@ Resources:
     Properties:
       BucketName: "audios"
 
+  ProcessedFilesBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: "processed-files"
+
   LambdaExecutionRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -39,10 +44,15 @@ Resources:
                 Action:
                   - "s3:GetObject"
                 Resource: !Sub "arn:aws:s3:::${BucketAudios}/*"
+              - Effect: "Allow"
+                Action:
+                  - "s3:PutObject"
+                Resource: !Sub "arn:aws:s3:::${ProcessedFilesBucket}/*"
   
   ProcessS3EventFunction:
     Type: "AWS::Lambda::Function"
     Properties:
+      FunctionName: process-file
       Handler: "handler.lambda_handler"
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
