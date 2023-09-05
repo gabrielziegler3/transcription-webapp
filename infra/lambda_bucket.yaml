@@ -1,0 +1,12 @@
+Resources:
+  BucketLambda:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub "lambda-bucket-${AWS::AccountId}"
+
+Outputs:
+  BucketLambdaOutput:
+    Description: "The name of the lambda bucket"
+    Value: !Ref BucketLambda
+    Export:
+      Name: "BucketLambdaExportName"

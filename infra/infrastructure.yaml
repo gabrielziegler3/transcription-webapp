@@ -2,22 +2,17 @@ Resources:
   UploadFileSQS:
     Type: "AWS::SQS::Queue"
     Properties: 
-      QueueName: "upload-file-sqs"
-
-  BucketLambda:
-    Type: "AWS::S3::Bucket"
-    Properties:
-      BucketName: "lambda-bucket"
+      QueueName: !Sub "upload-file-sqs-${AWS::AccountId}"
 
   BucketAudios:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "audios"
+      BucketName: !Sub "audios-${AWS::AccountId}"
 
   ProcessedFilesBucket:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: "processed-files"
+      BucketName: !Sub "processed-files-${AWS::AccountId}"
 
   LambdaExecutionRole:
     Type: "AWS::IAM::Role"
@@ -52,11 +47,11 @@ Resources:
   ProcessS3EventFunction:
     Type: "AWS::Lambda::Function"
     Properties:
-      FunctionName: process-file
+      FunctionName: !Sub "process-file-${AWS::AccountId}"
       Handler: "handler.lambda_handler"
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
-        S3Bucket: !Ref BucketLambda
+        S3Bucket: !ImportValue "BucketLambdaExportName"
         S3Key: "lambda.zip"
       Runtime: "python3.8"
   
