@@ -1,18 +1,41 @@
 Resources:
-  UploadFileSQS:
-    Type: "AWS::SQS::Queue"
-    Properties: 
-      QueueName: !Sub "upload-file-sqs-${AWS::AccountId}"
-
   BucketAudios:
     Type: "AWS::S3::Bucket"
+    DependsOn:
+      - QueuePolicy
     Properties:
       BucketName: !Sub "audios-${AWS::AccountId}"
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: "s3:ObjectCreated:*"
+            Queue: !GetAtt UploadFileSQS.Arn
 
   ProcessedFilesBucket:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: !Sub "processed-files-${AWS::AccountId}"
+
+  QueuePolicy:
+    Type: 'AWS::SQS::QueuePolicy'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: "AllowS3ToPublish"
+            Effect: Allow
+            Principal:
+              Service: "s3.amazonaws.com"
+            Action:
+              - 'SQS:SendMessage'
+              - 'SQS:ReceiveMessage'
+            Resource: !GetAtt UploadFileSQS.Arn
+      Queues:
+        - !Ref UploadFileSQS
+
+  UploadFileSQS:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: !Sub "upload-file-sqs-${AWS::AccountId}"
 
   LambdaExecutionRole:
     Type: "AWS::IAM::Role"
@@ -43,7 +66,7 @@ Resources:
                 Action:
                   - "s3:PutObject"
                 Resource: !Sub "arn:aws:s3:::${ProcessedFilesBucket}/*"
-  
+
   ProcessS3EventFunction:
     Type: "AWS::Lambda::Function"
     Properties:
@@ -51,10 +74,10 @@ Resources:
       Handler: "handler.lambda_handler"
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
-        S3Bucket: !ImportValue "BucketLambdaExportName"
+        S3Bucket: !ImportValue BucketLambdaExportName
         S3Key: "lambda.zip"
       Runtime: "python3.8"
-  
+
   LambdaSQSTrigger:
     Type: "AWS::Lambda::EventSourceMapping"
     Properties:
