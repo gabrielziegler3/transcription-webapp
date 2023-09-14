@@ -1,9 +1,13 @@
 import boto3
 import json
 import datetime
+import os
 
 def lambda_handler(event, context):
-    s3_client = boto3.client('s3', endpoint_url='http://localstack:4566')
+    s3_client = boto3.client('s3')
+
+    # Read environment variables for result bucket name
+    result_bucket_name = os.environ.get('RESULT_BUCKET_NAME', 'processed-files')
 
     for record in event['Records']:
         # Extract the S3 bucket name and object key from the SQS message
@@ -15,8 +19,7 @@ def lambda_handler(event, context):
         # Prepare the result file content
         result_content = f"| {object_key} | {datetime.datetime.now().isoformat()} |\n"
 
-        # Define the new bucket name and result file name
-        result_bucket_name = 'processing-results'
+        # Define the result file name
         result_file_name = 'result_file.csv'
 
         # Check if the result file already exists and append to it
