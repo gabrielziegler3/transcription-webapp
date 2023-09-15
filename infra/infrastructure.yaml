@@ -66,6 +66,16 @@ Resources:
                 Action:
                   - "s3:PutObject"
                 Resource: !Sub "arn:aws:s3:::${ProcessedFilesBucket}/*"
+        - PolicyName: "CloudWatchLogsPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
 
   ProcessS3EventFunction:
     Type: "AWS::Lambda::Function"
