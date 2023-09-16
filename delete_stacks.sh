@@ -4,6 +4,7 @@ echo "Deleting files from buckets..."
 
 aws s3 rm --recursive s3://audios-418411734027
 aws s3 rm --recursive s3://lambda-bucket-418411734027
+aws s3 rm --recursive s3://processed-files-418411734027
 
 echo "Deleting stack transcription-webapp..."
 
