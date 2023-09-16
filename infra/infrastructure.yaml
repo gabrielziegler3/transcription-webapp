@@ -81,7 +81,7 @@ Resources:
     Type: "AWS::Lambda::Function"
     Properties:
       FunctionName: !Sub "process-file-${AWS::AccountId}"
-      Handler: "handler.lambda_handler"
+      Handler: "lambda_function.lambda_handler"
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         S3Bucket: !ImportValue "BucketLambdaExportName"
@@ -94,7 +94,7 @@ Resources:
   LambdaSQSTrigger:
     Type: "AWS::Lambda::EventSourceMapping"
     Properties:
-      BatchSize: 10
+      BatchSize: 1
       EventSourceArn: !GetAtt UploadFileSQS.Arn
       FunctionName: !GetAtt ProcessS3EventFunction.Arn
       Enabled: "True"
