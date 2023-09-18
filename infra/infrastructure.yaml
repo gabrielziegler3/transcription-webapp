@@ -98,3 +98,15 @@ Resources:
       EventSourceArn: !GetAtt UploadFileSQS.Arn
       FunctionName: !GetAtt ProcessS3EventFunction.Arn
       Enabled: "True"
+
+  LambdaLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${ProcessS3EventFunction}'
+      RetentionInDays: 2
+
+  LambdaLogStream:
+    Type: 'AWS::Logs::LogStream'
+    Properties:
+      LogGroupName: !Ref LambdaLogGroup
+      LogStreamName: !Sub '${AWS::StackName}-stream'
