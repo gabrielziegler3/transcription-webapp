@@ -2,9 +2,13 @@
 
 printf "Consider the following project\n"
 
+echo "\`\`\`"
+
 tree -L 2 -I "volume|audio*|*.md"
 
-printf "With the following cloudformation files:\n"
+printf "\`\`\`\n\n"
+
+echo "With the following cloudformation files:"
 
 printf "infra/infrastructure.yaml\n\n"
 
@@ -14,7 +18,7 @@ cat ./infra/infrastructure.yaml
 
 printf "\`\`\`\n\n"
 
-printf "infra/lambda_bucket.yaml\n"
+echo "infra/lambda_bucket.yaml"
 
 printf "\`\`\`yaml"
 
