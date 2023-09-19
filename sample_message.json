@@ -1,0 +1,57 @@
+{
+    "Records": [
+        {
+            "messageId": "9c3255a5-cc6c-4c2b-98b6-f1b3219b7628",
+            "receiptHandle": "AQEBgXYklfmwlnvhgt0bOoJ4Er+mx1UvOuCo2UP+JSvSb/o3xdS5/jHZe5oxdC/yM3BHXGSfjnibxPnanW9tFF4msQaLiTTJKsBbuKDi6k63yDefvcPyJ48dUf2l5VbivIyJiUVHf8OhxZvBr8sTYYjoAItOpAU6FR8uX1IqgL+o9H6jw243VClLgJtND4m4g99RERXErU0JsGRPKJo2QD7TRD41YsV3SOY64YaWl5yTwE0Ol1H1kEYhCTFBPNQYITRaUPYeI5zRcsg0jfSdZ6CKm1x3368tmxgD5ACXKMaLdCI9pnbPMtc7xT6HAIWbiYglNFGj5Vqa8oU+IVx6ymgG2xFlLNUEVVGaxf8PcA3smw4YQLkjyn4+Wko/VziMLbq/oSCtbUspipgcwDmnCMqmAHkWaKyYxcG98XCJS5MKxlE=",
+            "body": {
+                "Records": [
+                    {
+                        "eventVersion": "2.1",
+                        "eventSource": "aws:s3",
+                        "awsRegion": "us-east-1",
+                        "eventTime": "2023-09-16T11:19:49.696Z",
+                        "eventName": "ObjectCreated:Put",
+                        "userIdentity": {
+                            "principalId": "AWS:AIDAWC22IMQFREXX4RV3T"
+                        },
+                        "requestParameters": {
+                            "sourceIPAddress": "77.246.194.242"
+                        },
+                        "responseElements": {
+                            "x-amz-request-id": "TWRKQD7GKB8PHDYJ",
+                            "x-amz-id-2": "aydFQ5i8rlUlfG/fJoJZTi+HsKkoFrOBS3qAeKXzvzXuiYMlXfnA5/NZ54cCXKGqeISJNRB+6V2GrHHrgTrpQCOFl+6Phfq9"
+                        },
+                        "s3": {
+                            "s3SchemaVersion": "1.0",
+                            "configurationId": "bc8cf658-6263-4059-846d-f40b0ba102d4",
+                            "bucket": {
+                                "name": "audios-418411734027",
+                                "ownerIdentity": {
+                                    "principalId": "A3B3GVWDL3JRSY"
+                                },
+                                "arn": "arn:aws:s3:::audios-418411734027"
+                            },
+                            "object": {
+                                "key": "audio_2023-07-13_10-22-48.ogg",
+                                "size": 19865,
+                                "eTag": "a89997def0c6134af49c30235c178bfc",
+                                "sequencer": "0065058F5574D87D5B"
+                            }
+                        }
+                    }
+                ]
+            },
+            "attributes": {
+                "ApproximateReceiveCount": "2",
+                "SentTimestamp": "1694863190828",
+                "SenderId": "AIDAJHIPRHEMV73VRJEBU",
+                "ApproximateFirstReceiveTimestamp": "1694863190837"
+            },
+            "messageAttributes": {},
+            "md5OfBody": "661c06ba513365ed871c1ece976d434e",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:us-east-1:418411734027:upload-file-sqs-418411734027",
+            "awsRegion": "us-east-1"
+        }
+    ]
+}
