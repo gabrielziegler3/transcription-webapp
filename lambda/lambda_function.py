@@ -12,6 +12,9 @@ logger.setLevel(logging.INFO)  # Set the desired log level
 def lambda_handler(event, context):
     s3_client = boto3.client('s3')
 
+    if 'Records' not in event:
+        return
+
     # Read environment variables for result bucket name
     result_bucket_name = os.environ.get(
         'RESULT_BUCKET_NAME', 'processed-files')
@@ -54,11 +57,6 @@ def lambda_handler(event, context):
                 # Write the result file to the new S3 bucket
                 s3_client.put_object(
                     Bucket=result_bucket_name, Key=result_file_name, Body=result_content)
-
-        return {
-            'statusCode': 200,
-            'body': json.dumps('Processed message successfully')
-        }
     except Exception as e:
         logger.error(e)
         raise e
