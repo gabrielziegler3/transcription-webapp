@@ -19,6 +19,17 @@ echo "Waiting for stack to be deleted..."
 # wait for stack to be deleted
 aws cloudformation wait stack-delete-complete --stack-name transcription-webapp
 
+echo "Deleting CloudWatch log groups..."
+
+# Get all log groups
+logGroups=$(aws logs describe-log-groups --query 'logGroups[*].logGroupName' --output text)
+
+# Delete all log groups
+for logGroup in $logGroups; do
+  echo "Deleting log group $logGroup..."
+  aws logs delete-log-group --log-group-name $logGroup
+done
+
 echo "Deleting stack lambda-bucket-stack..."
 
 aws cloudformation delete-stack --stack-name lambda-bucket-stack

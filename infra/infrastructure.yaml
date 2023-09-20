@@ -103,7 +103,7 @@ Resources:
     Type: 'AWS::Logs::LogGroup'
     Properties:
       LogGroupName: !Sub '/aws/lambda/${ProcessS3EventFunction}'
-      RetentionInDays: 2
+      RetentionInDays: 3
 
   LambdaLogStream:
     Type: 'AWS::Logs::LogStream'
